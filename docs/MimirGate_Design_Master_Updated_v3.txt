@@ -1,0 +1,173 @@
+
+MimirGate - Design Document (Master Copy, Updated with Package Structure & Domain Choice)
+========================================================================================
+
+Purpose & Vision
+----------------
+MimirGate is a modern yet retro-inspired BBS system designed for:
+- Maximum compatibility with both modern terminal clients and retro hardware (e.g., Commodore 64 Ultimate)
+- Easy installation and configuration: a ready-to-run system with minimal setup
+- Open source, modular, and extensible architecture
+
+Project Repository
+------------------
+GitHub Repository: [MimirGate on GitHub](https://github.com/Bjornsrud/MimirGate)
+
+Domain Choice
+-------------
+- **mimirgate.com** chosen as main domain for international use.
+- **mimirgate.no** optional secondary domain for Norwegian identity.
+
+Java Package Root:  
+```
+com.mimirgate
+```
+
+License Discussion
+------------------
+Current license: **MIT License** (as set in GitHub repo).  
+
+Considerations for license choice before making the repo public:
+- **MIT License**: Very permissive, allows commercial and private use, modification, distribution. Minimal restrictions.
+- **Apache 2.0**: Similar to MIT but adds explicit patent grant and termination clause.
+- **GPL v3**: Requires derivative works to remain open source (copyleft). Not as permissive for closed-source use.
+
+Open Question: Should we keep MIT or switch to Apache 2.0 / GPL before public release?  
+
+Key Goals
+---------
+1. **Retro feel, modern core**: Telnet-based, ASCII-only interface (7-bit), simple menus, minimal dependencies.
+2. **Cross-platform compatibility**: Works on classic 40-column terminals and modern 80+ column terminals.
+3. **Modular architecture**: Core system with fixed functional areas, easily configurable via JSON files.
+4. **Easy customization**: Menus, splash screens, conferences, and file areas defined in simple JSON configs.
+5. **Out-of-the-box experience**: Default configuration ready to run without extra setup.
+
+Framework & Storage Choices
+---------------------------
+- **Spring Boot** as the main framework for configuration, modularity, and potential future web-admin features.
+- **H2 Database** (file-based) for storing dynamic data:
+  * Forum threads, private messages, chat logs, file metadata.
+  * Runs embedded, no external installation required.
+- **JSON Files** for static configuration:
+  * Menus, splash screens, initial conferences/file areas setup.
+  * Loaded via Jackson at startup.
+
+Proposed Package Structure
+---------------------------
+```
+com.mimirgate
+ ├── core            → Core logic: telnet server, sessions, input/output
+ ├── config          → JSON configuration loading, app settings
+ ├── modules
+ │    ├── forum      → Forum module (conferences, threads, posts)
+ │    ├── messages   → Private messages
+ │    ├── chat       → Real-time chat
+ │    └── files      → File area module
+ ├── ui              → Menu rendering, 40/80 columns, splash screens
+ ├── admin           → Sysop functions, optional web admin later
+ ├── persistence     → H2 database, Spring Data JPA repositories
+ └── MimirGateApp     → Spring Boot main class
+```
+
+Core Functional Areas
+---------------------
+- **Main Menu**: Entry point for all functions.
+- **Conference/Forum System**: Conferences → Threads → Posts.
+- **File Area**: File groups, file listings, download metadata (future feature).
+- **Messaging**: Private user-to-user messages.
+- **Chat**: Real-time chat (IRC-like).
+- **Configuration Menu**: User settings, sysop settings.
+
+Architecture Overview
+---------------------
+- **Core (BBS Engine)**:  
+  Handles connections, sessions, state transitions, module communication.
+
+- **Presentation Layer**:  
+  Renders menus, splash screens, and user interfaces dynamically based on terminal width (40/80 columns).
+
+- **Configuration Layer**:  
+  Loads JSON configs via Jackson → Java objects → used by core and modules.
+
+- **Persistence Layer**:  
+  Spring Data JPA with H2 database for dynamic data.
+
+- **Modules**:  
+  Each functional area is implemented as a module (e.g., MessagingModule, ForumModule).
+
+- **Spring Boot Integration**:  
+  For application lifecycle, configuration, and optional monitoring via Actuator.
+
+Technology Choices
+------------------
+- Java 21 + Spring Boot
+- Spring Data JPA + H2 (embedded)
+- Jackson for JSON serialization
+- Telnet (simple socket server initially, optional Lanterna later)
+- UTF-8 internally, ASCII 7-bit for presentation layer
+- Modular code design, minimal external dependencies
+
+Configuration Files
+-------------------
+- **menus.json**: Menu definitions and navigation structure
+- **conferences.json**: Conferences, forums, threads
+- **files.json**: File groups and metadata
+- **system.json**: Splash screens, goodbye screens, system texts
+
+Default configs included for ready-to-run setup.
+
+40/80 Column Strategy (Open Decision)
+-------------------------------------
+1. **Two sets of files** (40 vs 80) → Simple, but duplicate maintenance.
+2. **Single set + dynamic renderer** → Less duplication, more abstraction.
+3. **Hybrid approach** → Dynamic by default, override if needed.
+
+Configuration Reload (Open Decision)
+------------------------------------
+- Reload at runtime vs. only on startup.
+
+Extensibility (Open Decision)
+-----------------------------
+- Should we allow third-party modules?  
+- Define module interfaces now or later?
+
+Compatibility Considerations
+-----------------------------
+- Assume limited ANSI/VT100 support on retro clients.
+- Use only basic cursor commands (clear screen, cursor home, line breaks).
+- Default to 40 columns, allow 80+ if terminal supports it or user selects it.
+
+Decisions Made So Far
+---------------------
+- Project name: **MimirGate**
+- Language: Java 21 + Spring Boot
+- Config format: JSON, loaded via Jackson
+- Database: H2 embedded (file-based) for dynamic data
+- Architecture: Modular core + presentation + config + modules
+- Telnet as primary protocol (no SSH initially)
+- ASCII 7-bit output for maximum compatibility
+- Out-of-the-box experience prioritized
+- Domain: **mimirgate.com** chosen for package root
+
+Open Questions
+---------------
+1. 40/80-column strategy (two sets vs dynamic vs hybrid)
+2. Runtime config reload vs startup-only
+3. Third-party module support
+4. License choice before making repository public (MIT vs Apache 2.0 vs GPL)
+5. Domain registration: mimirgate.no as secondary?
+6. Minimum MVP features vs later extensions
+
+Next Steps
+-----------
+1. Decide open questions above.
+2. Create architecture diagram + initial project skeleton.
+3. Implement minimal Telnet server + main menu + config loader.
+4. Add modules incrementally (forums, messaging, chat, files).
+
+How to Use This Document in a New Chat
+---------------------------------------
+Start a new chat with:  
+"Here is the MimirGate design document. Please read it carefully. We want to continue development from where we left off."
+
+This ensures all context is preserved for future steps.

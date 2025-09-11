@@ -1,0 +1,157 @@
+
+MimirGate MVP Design Document
+=============================
+
+Purpose & Scope
+---------------
+This document defines the Minimum Viable Product (MVP) for MimirGate BBS.  
+It focuses on core features needed to have a functional BBS with retro style menus, conferences, message wall, private messages, and basic user/admin features.  
+
+MVP Goals
+---------
+- Text-based BBS accessible via Telnet.
+- Retro feel with 40/80 column menus loaded from text files.
+- Basic user management with roles and permissions.
+- Conferences with threads and posts.
+- Private messages between users.
+- Public MessageWall for short announcements.
+- Sysop and moderator features for control and security.
+- Optional simple web server for info page and future admin console.
+
+Core Features
+-------------
+1. **User Management**
+   - Auto-registration on first login.
+   - User fields:
+     - Real name
+     - Username (unique, displayed in UI)
+     - Password (hashed)
+     - Role: Sysop, CoSysop, Moderator, User
+     - Config: screen width, charset, etc.
+     - Bio (short text about user)
+     - Email (optional, for verification & bans)
+     - Last login timestamp
+     - Muted flag (if temporarily banned from posting)
+     - Joined conferences list
+   - Only one active session per username at a time.
+
+2. **Conferences**
+   - Defined in `conferences.json`.
+   - Fields: type, name, description, conferenceId, restricted, moderators[]
+   - Membership required to post/read (except default conferences).
+   - Posts stored in H2 database with: id, threadId, author, title, content, timestamp.
+   - Moderator menu for users listed as moderators.
+
+3. **MessageWall**
+   - Public wall for short messages (max 255 chars).
+   - Shown at login, newest X messages displayed based on screen size.
+   - Stored in H2 database with id, author, content, timestamp.
+
+4. **Private Messages**
+   - Implemented as "private conferences" with only two members.
+   - Reuses conference/thread/post logic.
+   - Allows possible future group private chats.
+
+5. **Menus & Navigation**
+   - Static text files in `/menus/40` and `/menus/80`:
+     - mainmenu.txt, conferencemenu.txt, postmenu.txt, sysopmenu.txt, configmenu.txt, messagewallmenu.txt, splash.txt, goodbye.txt
+   - Context-sensitive commands, multi-letter supported (e.g., LN, LNC).
+   - `?` or `MENU` shows current menu options again.
+   - Decorative prompt at bottom shows context, e.g.:
+     ```
+     -=[Conference Menu]=- [/Politics]: _
+     ```
+   - Prompt not shown while editing posts/messages.
+
+6. **Message Editor**
+   - Editing mode shows:
+     ```
+     --- Editing message (255 chars max) ---
+     Ctrl+S = Save | Ctrl+C = Cancel
+     Characters left: 120
+     ```
+   - Real-time character counter.
+
+7. **Sysop Features**
+   - Delete threads or posts (thread delete removes all replies).
+   - Mute users for X hours.
+   - Assign/remove roles (Moderator, CoSysop, Sysop).
+   - Ban/unban emails from registration/posting.
+   - View unverified users, resend verification mails, delete inactive accounts.
+   - Add/remove conferences (if not too complex for MVP, else via JSON only).
+
+8. **Email Integration (Optional)**
+   - Email verification before posting:
+     - Email sent on registration with verification code.
+     - Users can read but not post until verified.
+   - Configurable: can be disabled for offline/local BBS.
+   - Simple SMTP setup (e.g., Gmail SMTP) with dummy sender for local testing.
+
+9. **Simple Web Server (Optional)**
+   - Default static page in `resources/static/index.html` with:
+     - Telnet address
+     - Rules and info
+     - Sysop contact
+   - Configurable in `application.properties`:
+     ```
+     web.enabled=true
+     web.port=8080
+     web.title=MimirGate BBS
+     ```
+   - Can be disabled or port changed easily.
+   - Future admin console can reuse this web server.
+
+10. **Logging**
+    - Basic logging to file for logins, errors, sysop actions.
+
+11. **Data Loading**
+    - Conferences loaded from JSON on startup (or via sysop menu refresh).
+    - Posts/messages loaded on-demand from H2 database.
+
+12. **Future Extensibility (Reserved)**
+    - File area module
+    - Real-time chat module
+    - Web-based admin panel
+
+Technical Architecture
+----------------------
+Package structure for MVP:
+```
+com.mimirgate
+ ├── core            → TelnetServer, SessionHandler, MenuHandler
+ ├── config          → ConfigLoader, ConferenceConfig
+ ├── modules
+ │    ├── forum      → ForumService, ForumController, Thread, Post
+ │    ├── messagewall→ MessageWallService, MessageWallController
+ │    └── messages   → PrivateMessageService, PrivateMessageController
+ ├── ui              → MenuLoader, MenuRenderer, EditorRenderer
+ ├── persistence     → User, Post, Message, Repositories (Spring Data JPA)
+ ├── admin           → AdminService (Sysop & Moderator features)
+ ├── web             → WebController (optional info page, future admin console)
+ └── MimirGateApp     → Spring Boot main app
+```
+
+Data Model Highlights
+---------------------
+- **User**: id, username, realName, passwordHash, role, config, bio, email, verified, muted, lastLogin, joinedConferences[]
+- **Conference**: id, name, description, restricted, moderators[]
+- **Post**: id, threadId, conferenceId, author, title, content, timestamp
+- **MessageWallEntry**: id, author, content, timestamp
+
+Menus & Commands
+----------------
+- Context-based commands per menu.
+- Multi-letter commands supported (e.g., LN, LNC).
+- `?` shows all available commands in current menu.
+
+Next Steps
+----------
+1. Build project skeleton with Spring Boot.
+2. Implement TelnetServer + SessionHandler.
+3. Add menu system with static files for 40/80 columns.
+4. Implement user registration/login flow.
+5. Add conferences (JSON + DB), posts, private messages, message wall.
+6. Add sysop & moderator menus.
+7. Add optional email verification.
+8. Add optional simple web server for info page.
+
