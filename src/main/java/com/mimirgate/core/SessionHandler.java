@@ -1,13 +1,19 @@
 package com.mimirgate.core;
 
 import com.mimirgate.core.menus.*;
+import com.mimirgate.core.util.WallRenderer;
 import com.mimirgate.model.LoginResult;
 import com.mimirgate.model.User;
+import com.mimirgate.model.WallMessage;
 import com.mimirgate.service.UserService;
+import com.mimirgate.service.WallService;
 
 import java.io.*;
 import java.net.Socket;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import static com.mimirgate.core.util.WallRenderer.renderWall;
 
 public class SessionHandler implements Runnable {
     private final Socket socket;
@@ -22,18 +28,21 @@ public class SessionHandler implements Runnable {
     private String currentMenu = "MAIN";
 
     private final UserService userService;
+    private final WallService wallService;
+    private User currentUser;
 
     public SessionHandler(Socket socket, BufferedReader in, PrintWriter out,
-                          Map<String, String> menuTexts40, Map<String, String> menuTexts80,
-                          UserService userService) {
+                          Map<String,String> menuTexts40, Map<String,String> menuTexts80,
+                          UserService userService, WallService wallService) {
         this.socket = socket;
         this.in = in;
         this.out = out;
         this.menuTexts40 = menuTexts40;
         this.menuTexts80 = menuTexts80;
         this.userService = userService;
+        this.wallService = wallService;
         loadWisdoms();
-        initMenus();
+        // Merk: initMenus() kjøres først etter login når vi kjenner bruker + width
     }
 
     private void loadWisdoms() {
@@ -61,12 +70,15 @@ public class SessionHandler implements Runnable {
 
     private void initMenus() {
         Map<String, String> activeMenus = getActiveMenus();
-        menus.put("MAIN", new MainMenuHandler(activeMenus.get("MAIN")));
+        menus.clear();
+        menus.put("MAIN",   new MainMenuHandler(activeMenus.get("MAIN")));
         menus.put("CONFIG", new ConfigMenuHandler(activeMenus.get("CONFIG")));
-        menus.put("SYSOP", new SysopMenuHandler(activeMenus.get("SYSOP")));
-        menus.put("PM", new PmMenuHandler(activeMenus.get("PM")));
-        menus.put("WALL", new WallMenuHandler(activeMenus.get("WALL")));
-        menus.put("FILE", new FileMenuHandler(activeMenus.get("FILE")));
+        menus.put("SYSOP",  new SysopMenuHandler(activeMenus.get("SYSOP")));
+        menus.put("PM",     new PmMenuHandler(activeMenus.get("PM")));
+        // Viktig: WallMenuHandler trenger service + bruker + width
+        String username = (currentUser != null) ? currentUser.getUsername() : "guest";
+        menus.put("WALL",   new WallMenuHandler(activeMenus.get("WALL"), wallService, username, terminalWidth));
+        menus.put("FILE",   new FileMenuHandler(activeMenus.get("FILE")));
     }
 
     private void printMenu() {
@@ -89,48 +101,48 @@ public class SessionHandler implements Runnable {
     @Override
     public void run() {
         try {
+            // 1) Login
             LoginHandler loginHandler = new LoginHandler(userService, menuTexts40, menuTexts80);
-            LoginResult loginResult;
+            Optional<LoginResult> loginResultOpt = loginHandler.handleLogin(out, in);
+            if (loginResultOpt.isEmpty()) return;
 
-            do {
-                loginResult = loginHandler.handleLogin(out, in);
-                if (loginResult.getStatus() == LoginResult.LoginStatus.DISCONNECT) {
-                    return;
-                }
-            } while (loginResult.getStatus() == LoginResult.LoginStatus.RETRY);
-
+            LoginResult loginResult = loginResultOpt.get();
+            if (loginResult.getStatus() == LoginResult.LoginStatus.DISCONNECT) return;
             this.terminalWidth = loginResult.getTerminalWidth();
+            this.currentUser   = loginResult.getUser();
 
+            // Menyene må initialiseres ETTER at bruker/width er kjent
+            initMenus();
+
+            // 2) Vis Wall “velkomst” først
+            showWallPreviewAndWait();
+
+            // 3) Vanlig menyløype
             printMenu();
             printPrompt();
+
             String command;
             boolean running = true;
 
             while (running && (command = in.readLine()) != null) {
                 command = command.trim();
-                if (command.isEmpty()) {
-                    printPrompt();
-                    continue;
-                }
+                if (command.isEmpty()) { printPrompt(); continue; }
 
-                // Globale kommandoer
+                // Globale
                 if ("40".equalsIgnoreCase(command)) {
                     setTerminalWidth(40);
                     initMenus();
-                    printMenu();
-                    printPrompt();
+                    printMenu(); printPrompt();
                     continue;
                 }
                 if ("80".equalsIgnoreCase(command)) {
                     setTerminalWidth(80);
                     initMenus();
-                    printMenu();
-                    printPrompt();
+                    printMenu(); printPrompt();
                     continue;
                 }
                 if ("?".equalsIgnoreCase(command)) {
-                    printMenu();
-                    printPrompt();
+                    printMenu(); printPrompt();
                     continue;
                 }
 
@@ -145,30 +157,18 @@ public class SessionHandler implements Runnable {
                 MenuNav nav = handler.handleCommand(command, out, in);
 
                 switch (nav) {
-                    case DISCONNECT:
-                        out.println("Goodbye!");
-                        running = false;
-                        break;
-                    case MAIN:
-                        currentMenu = "MAIN"; printMenu(); break;
-                    case CONFIG:
-                        currentMenu = "CONFIG"; printMenu(); break;
-                    case SYSOP:
-                        currentMenu = "SYSOP"; printMenu(); break;
-                    case PM:
-                        currentMenu = "PM"; printMenu(); break;
-                    case WALL:
-                        currentMenu = "WALL"; printMenu(); break;
-                    case FILE:
-                        currentMenu = "FILE"; printMenu(); break;
+                    case DISCONNECT: out.println("Goodbye!"); running = false; break;
+                    case MAIN:   currentMenu = "MAIN";   printMenu(); break;
+                    case CONFIG: currentMenu = "CONFIG"; printMenu(); break;
+                    case SYSOP:  currentMenu = "SYSOP";  printMenu(); break;
+                    case PM:     currentMenu = "PM";     printMenu(); break;
+                    case WALL:   currentMenu = "WALL";   printMenu(); break;
+                    case FILE:   currentMenu = "FILE";   printMenu(); break;
                     case STAY:
-                    default:
-                        break;
+                    default: break;
                 }
 
-                if (running) {
-                    printPrompt();
-                }
+                if (running) printPrompt();
             }
 
         } catch (IOException e) {
@@ -182,5 +182,28 @@ public class SessionHandler implements Runnable {
         if (width == 40 || width == 80) {
             this.terminalWidth = width;
         }
+    }
+
+    private void showWallPreviewAndWait() throws IOException {
+        List<WallMessage> msgs = wallService.getMessagesForWidth(terminalWidth);
+        renderWall(out, in, msgs, terminalWidth);
+    }
+
+    // Enkle hjelpere (bruk dine hvis du har fra før)
+    private String currentUserLine(String user, String ts) {
+        String s = user + " — " + ts;
+        return s.length() > terminalWidth ? s.substring(0, terminalWidth) : s;
+    }
+
+    private List<String> wrap(String text, int width) {
+        List<String> lines = new ArrayList<>();
+        if (text == null) return lines;
+        int i = 0;
+        while (i < text.length()) {
+            int end = Math.min(i + width, text.length());
+            lines.add(text.substring(i, end));
+            i = end;
+        }
+        return lines;
     }
 }

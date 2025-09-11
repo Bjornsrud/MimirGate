@@ -24,7 +24,7 @@ public class LoginHandler {
         this.menuTexts80 = menuTexts80;
     }
 
-    public LoginResult handleLogin(PrintWriter out, BufferedReader in) throws IOException {
+    public Optional<LoginResult> handleLogin(PrintWriter out, BufferedReader in) throws IOException {
         while (true) {
             LoginMenuHandler menu = new LoginMenuHandler(menuTexts40, menuTexts80, terminalWidth);
             menu.printMenu(out);
@@ -32,7 +32,9 @@ public class LoginHandler {
             out.print("Choice: ");
             out.flush();
             String choice = in.readLine();
-            if (choice == null) return new LoginResult(null, terminalWidth, LoginResult.LoginStatus.DISCONNECT);
+            if (choice == null) {
+                return Optional.of(new LoginResult(null, terminalWidth, LoginResult.LoginStatus.DISCONNECT));
+            }
 
             switch (choice.trim().toUpperCase()) {
                 case "40":
@@ -44,18 +46,18 @@ public class LoginHandler {
                 case "L":
                     Optional<User> userOpt = login(out, in);
                     if (userOpt.isPresent()) {
-                        return new LoginResult(userOpt.get(), terminalWidth, LoginResult.LoginStatus.SUCCESS);
+                        return Optional.of(new LoginResult(userOpt.get(), terminalWidth, LoginResult.LoginStatus.SUCCESS));
                     }
-                    return new LoginResult(null, terminalWidth, LoginResult.LoginStatus.RETRY);
+                    return Optional.of(new LoginResult(null, terminalWidth, LoginResult.LoginStatus.RETRY));
                 case "R":
                     Optional<User> newUser = register(out, in);
                     if (newUser.isPresent()) {
-                        return new LoginResult(newUser.get(), terminalWidth, LoginResult.LoginStatus.SUCCESS);
+                        return Optional.of(new LoginResult(newUser.get(), terminalWidth, LoginResult.LoginStatus.SUCCESS));
                     }
-                    return new LoginResult(null, terminalWidth, LoginResult.LoginStatus.RETRY);
+                    return Optional.of(new LoginResult(null, terminalWidth, LoginResult.LoginStatus.RETRY));
                 case "D":
                     out.println("Goodbye!");
-                    return new LoginResult(null, terminalWidth, LoginResult.LoginStatus.DISCONNECT);
+                    return Optional.of(new LoginResult(null, terminalWidth, LoginResult.LoginStatus.DISCONNECT));
                 default:
                     out.println("Invalid choice. Try again.");
             }

@@ -1,6 +1,7 @@
 package com.mimirgate.core;
 
 import com.mimirgate.service.UserService;
+import com.mimirgate.service.WallService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -28,9 +29,13 @@ public class TelnetServer {
     private Map<String, String> menuTexts40 = new HashMap<>();
     private Map<String, String> menuTexts80 = new HashMap<>();
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final WallService wallService;
 
+    public TelnetServer(UserService userService, WallService wallService) {
+        this.userService = userService;
+        this.wallService = wallService;
+    }
 
     @PostConstruct
     public void start() {
@@ -50,7 +55,8 @@ public class TelnetServer {
                         BufferedReader in = new BufferedReader(
                                 new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
 
-                        clientPool.submit(new SessionHandler(clientSocket, in, out, menuTexts40, menuTexts80, userService));
+                        clientPool.submit(new SessionHandler(
+                                clientSocket, in, out, menuTexts40, menuTexts80, userService, wallService));
 
                     } catch (IOException e) {
                         if (running) {
