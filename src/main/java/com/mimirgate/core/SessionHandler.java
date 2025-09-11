@@ -1,6 +1,9 @@
 package com.mimirgate.core;
 
 import com.mimirgate.core.menus.*;
+import com.mimirgate.model.LoginResult;
+import com.mimirgate.model.User;
+import com.mimirgate.service.UserService;
 
 import java.io.*;
 import java.net.Socket;
@@ -18,13 +21,17 @@ public class SessionHandler implements Runnable {
     private static final Random random = new Random();
     private String currentMenu = "MAIN";
 
+    private final UserService userService;
+
     public SessionHandler(Socket socket, BufferedReader in, PrintWriter out,
-                          Map<String, String> menuTexts40, Map<String, String> menuTexts80) {
+                          Map<String, String> menuTexts40, Map<String, String> menuTexts80,
+                          UserService userService) {
         this.socket = socket;
         this.in = in;
         this.out = out;
         this.menuTexts40 = menuTexts40;
         this.menuTexts80 = menuTexts80;
+        this.userService = userService;
         loadWisdoms();
         initMenus();
     }
@@ -82,6 +89,18 @@ public class SessionHandler implements Runnable {
     @Override
     public void run() {
         try {
+            LoginHandler loginHandler = new LoginHandler(userService, menuTexts40, menuTexts80);
+            LoginResult loginResult;
+
+            do {
+                loginResult = loginHandler.handleLogin(out, in);
+                if (loginResult.getStatus() == LoginResult.LoginStatus.DISCONNECT) {
+                    return;
+                }
+            } while (loginResult.getStatus() == LoginResult.LoginStatus.RETRY);
+
+            this.terminalWidth = loginResult.getTerminalWidth();
+
             printMenu();
             printPrompt();
             String command;

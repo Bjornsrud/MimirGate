@@ -1,5 +1,7 @@
 package com.mimirgate.core;
 
+import com.mimirgate.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
@@ -26,6 +28,10 @@ public class TelnetServer {
     private Map<String, String> menuTexts40 = new HashMap<>();
     private Map<String, String> menuTexts80 = new HashMap<>();
 
+    @Autowired
+    private UserService userService;
+
+
     @PostConstruct
     public void start() {
         loadMenuTexts();
@@ -44,7 +50,7 @@ public class TelnetServer {
                         BufferedReader in = new BufferedReader(
                                 new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
 
-                        clientPool.submit(new SessionHandler(clientSocket, in, out, menuTexts40, menuTexts80));
+                        clientPool.submit(new SessionHandler(clientSocket, in, out, menuTexts40, menuTexts80, userService));
 
                     } catch (IOException e) {
                         if (running) {
@@ -63,8 +69,8 @@ public class TelnetServer {
     }
 
     private void loadMenuTexts() {
-        String[] menuFiles = { "mainmenu.txt", "configmenu.txt", "sysopmenu.txt", "pmenu.txt", "wallmenu.txt", "filemenu.txt" };
-        String[] menuKeys = { "MAIN", "CONFIG", "SYSOP", "PM", "WALL", "FILE" };
+        String[] menuFiles = { "loginmenu.txt", "mainmenu.txt", "configmenu.txt", "sysopmenu.txt", "pmenu.txt", "wallmenu.txt", "filemenu.txt" };
+        String[] menuKeys  = { "LOGIN", "MAIN", "CONFIG", "SYSOP", "PM", "WALL", "FILE" };
 
         for (int i = 0; i < menuFiles.length; i++) {
             menuTexts40.put(menuKeys[i], loadResourceFile("menus/40/" + menuFiles[i]));
