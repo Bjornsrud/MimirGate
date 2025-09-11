@@ -31,3 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
+/data/mimirgate.mv.db
