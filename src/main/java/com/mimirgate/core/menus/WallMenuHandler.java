@@ -1,12 +1,12 @@
-package com.mimirgate.core;
+package com.mimirgate.core.menus;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 
-public class SysopMenuHandler implements MenuHandler {
+public class WallMenuHandler implements MenuHandler {
     private final String menuText;
 
-    public SysopMenuHandler(String menuText) {
+    public WallMenuHandler(String menuText) {
         this.menuText = menuText;
     }
 
@@ -16,13 +16,13 @@ public class SysopMenuHandler implements MenuHandler {
             case "?": out.println(menuText); return MenuNav.STAY;
             case "M": return MenuNav.MAIN;
             case "Q": return MenuNav.DISCONNECT;
-            default: out.println("\n[Sysop Command " + command + "] Not implemented yet."); return MenuNav.STAY;
+            default: out.println("\n[Wall Command " + command + "] Not implemented yet."); return MenuNav.STAY;
         }
     }
 
     @Override
     public String getPrompt() {
-        return "Sysop Menu (? for menu) > ";
+        return "Message Wall Menu (? for menu) > ";
     }
 
     @Override

@@ -1,12 +1,12 @@
-package com.mimirgate.core;
+package com.mimirgate.core.menus;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 
-public class WallMenuHandler implements MenuHandler {
+public class ConfigMenuHandler implements MenuHandler {
     private final String menuText;
 
-    public WallMenuHandler(String menuText) {
+    public ConfigMenuHandler(String menuText) {
         this.menuText = menuText;
     }
 
@@ -16,13 +16,13 @@ public class WallMenuHandler implements MenuHandler {
             case "?": out.println(menuText); return MenuNav.STAY;
             case "M": return MenuNav.MAIN;
             case "Q": return MenuNav.DISCONNECT;
-            default: out.println("\n[Wall Command " + command + "] Not implemented yet."); return MenuNav.STAY;
+            default: out.println("\n[Config Command " + command + "] Not implemented yet."); return MenuNav.STAY;
         }
     }
 
     @Override
     public String getPrompt() {
-        return "Message Wall Menu (? for menu) > ";
+        return "Config Menu (? for menu) > ";
     }
 
     @Override

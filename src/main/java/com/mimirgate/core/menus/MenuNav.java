@@ -1,4 +1,4 @@
-package com.mimirgate.core;
+package com.mimirgate.core.menus;
 
 public enum MenuNav {
     STAY,           // bli i nåværende meny

@@ -1,4 +1,4 @@
-package com.mimirgate.core;
+package com.mimirgate.core.menus;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;

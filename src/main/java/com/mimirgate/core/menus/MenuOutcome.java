@@ -1,4 +1,4 @@
-package com.mimirgate.core;
+package com.mimirgate.core.menus;
 
 public class MenuOutcome {
     public final boolean keepRunning;   // false => avslutt hele sesjonen
