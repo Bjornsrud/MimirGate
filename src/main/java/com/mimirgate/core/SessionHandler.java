@@ -51,12 +51,13 @@ public class SessionHandler implements Runnable {
     }
 
     private void initMenus() {
-        menus.put("MAIN", new MainMenuHandler(getActiveMenus().get("MAIN")));
-        menus.put("CONFIG", new ConfigMenuHandler(getActiveMenus().get("CONFIG")));
-        menus.put("SYSOP", new SysopMenuHandler(getActiveMenus().get("SYSOP")));
-        menus.put("PM", new PmMenuHandler(getActiveMenus().get("PM")));
-        menus.put("WALL", new WallMenuHandler(getActiveMenus().get("WALL")));
-        menus.put("FILE", new FileMenuHandler(getActiveMenus().get("FILE")));
+        Map<String, String> activeMenus = getActiveMenus();
+        menus.put("MAIN", new MainMenuHandler(activeMenus.get("MAIN")));
+        menus.put("CONFIG", new ConfigMenuHandler(activeMenus.get("CONFIG")));
+        menus.put("SYSOP", new SysopMenuHandler(activeMenus.get("SYSOP")));
+        menus.put("PM", new PmMenuHandler(activeMenus.get("PM")));
+        menus.put("WALL", new WallMenuHandler(activeMenus.get("WALL")));
+        menus.put("FILE", new FileMenuHandler(activeMenus.get("FILE")));
     }
 
     private void printMenu() {
@@ -128,32 +129,19 @@ public class SessionHandler implements Runnable {
                         running = false;
                         break;
                     case MAIN:
-                        currentMenu = "MAIN";
-                        printMenu();
-                        break;
+                        currentMenu = "MAIN"; printMenu(); break;
                     case CONFIG:
-                        currentMenu = "CONFIG";
-                        printMenu();
-                        break;
+                        currentMenu = "CONFIG"; printMenu(); break;
                     case SYSOP:
-                        currentMenu = "SYSOP";
-                        printMenu();
-                        break;
+                        currentMenu = "SYSOP"; printMenu(); break;
                     case PM:
-                        currentMenu = "PM";
-                        printMenu();
-                        break;
+                        currentMenu = "PM"; printMenu(); break;
                     case WALL:
-                        currentMenu = "WALL";
-                        printMenu();
-                        break;
+                        currentMenu = "WALL"; printMenu(); break;
                     case FILE:
-                        currentMenu = "FILE";
-                        printMenu();
-                        break;
+                        currentMenu = "FILE"; printMenu(); break;
                     case STAY:
                     default:
-                        // Ingenting, behold meny
                         break;
                 }
 
