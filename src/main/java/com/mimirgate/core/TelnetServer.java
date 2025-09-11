@@ -2,13 +2,15 @@ package com.mimirgate.core;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -21,9 +23,13 @@ public class TelnetServer {
     private ServerSocket serverSocket;
     private ExecutorService clientPool;
     private boolean running = true;
+    private Map<String, String> menuTexts40 = new HashMap<>();
+    private Map<String, String> menuTexts80 = new HashMap<>();
 
     @PostConstruct
     public void start() {
+        loadMenuTexts();
+
         clientPool = Executors.newCachedThreadPool();
         try {
             serverSocket = new ServerSocket(port);
@@ -33,7 +39,13 @@ public class TelnetServer {
                 while (running) {
                     try {
                         Socket clientSocket = serverSocket.accept();
-                        clientPool.submit(new SessionHandler(clientSocket));
+                        PrintWriter out = new PrintWriter(
+                                new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true);
+                        BufferedReader in = new BufferedReader(
+                                new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
+
+                        clientPool.submit(new SessionHandler(clientSocket, in, out, menuTexts40, menuTexts80));
+
                     } catch (IOException e) {
                         if (running) {
                             e.printStackTrace();
@@ -48,6 +60,27 @@ public class TelnetServer {
         } catch (IOException e) {
             throw new RuntimeException("Unable to start Telnet server on port " + port, e);
         }
+    }
+
+    private void loadMenuTexts() {
+        String[] menuFiles = { "mainmenu.txt", "configmenu.txt", "sysopmenu.txt", "pmenu.txt", "wallmenu.txt", "filemenu.txt" };
+        String[] menuKeys = { "MAIN", "CONFIG", "SYSOP", "PM", "WALL", "FILE" };
+
+        for (int i = 0; i < menuFiles.length; i++) {
+            menuTexts40.put(menuKeys[i], loadResourceFile("menus/40/" + menuFiles[i]));
+            menuTexts80.put(menuKeys[i], loadResourceFile("menus/80/" + menuFiles[i]));
+        }
+    }
+
+    private String loadResourceFile(String path) {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
+            if (is != null) {
+                return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "Menu file " + path + " not found.";
     }
 
     @PreDestroy

@@ -1,0 +1,32 @@
+package com.mimirgate.core;
+
+import java.io.BufferedReader;
+import java.io.PrintWriter;
+
+public class PmMenuHandler implements MenuHandler {
+    private final String menuText;
+
+    public PmMenuHandler(String menuText) {
+        this.menuText = menuText;
+    }
+
+    @Override
+    public MenuNav handleCommand(String command, PrintWriter out, BufferedReader in) {
+        switch (command.toUpperCase()) {
+            case "?": out.println(menuText); return MenuNav.STAY;
+            case "M": return MenuNav.MAIN;
+            case "Q": return MenuNav.DISCONNECT;
+            default: out.println("\n[PM Command " + command + "] Not implemented yet."); return MenuNav.STAY;
+        }
+    }
+
+    @Override
+    public String getPrompt() {
+        return "Private Messages Menu (? for menu) > ";
+    }
+
+    @Override
+    public String getMenuText() {
+        return menuText;
+    }
+}
