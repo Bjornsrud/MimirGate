@@ -71,8 +71,8 @@ public class SessionHandler implements Runnable {
     private void initMenus() {
         Map<String, String> activeMenus = getActiveMenus();
         menus.clear();
-        menus.put("MAIN",   new MainMenuHandler(activeMenus.get("MAIN")));
-        menus.put("CONFIG", new ConfigMenuHandler(activeMenus.get("CONFIG")));
+        menus.put("MAIN",   new MainMenuHandler(activeMenus.get("MAIN"), userService));
+        menus.put("CONFIG", new ConfigMenuHandler(activeMenus.get("CONFIG"), userService, currentUser));
         menus.put("SYSOP",  new SysopMenuHandler(activeMenus.get("SYSOP")));
         menus.put("PM",     new PmMenuHandler(activeMenus.get("PM")));
         // Viktig: WallMenuHandler trenger service + bruker + width

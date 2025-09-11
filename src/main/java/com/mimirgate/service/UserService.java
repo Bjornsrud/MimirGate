@@ -4,13 +4,16 @@ import com.mimirgate.model.User;
 import com.mimirgate.persistence.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Autowired
     public UserService(UserRepository userRepository) {
@@ -25,25 +28,24 @@ public class UserService {
         return userRepository.existsByUsername(username);
     }
 
-    public User createUser(String username, String passwordHash, String email, String bio, int terminalWidth) {
+    public User createUser(String username, String rawPassword, String email, String bio, int terminalWidth) {
         User user = new User();
         user.setUsername(username);
-        user.setPasswordHash(passwordHash);
+        user.setPasswordHash(passwordEncoder.encode(rawPassword));
         user.setEmail(email);
         user.setBio(bio);
         user.setTerminalWidth(terminalWidth);
 
-        // Hvis ingen brukere finnes, blir første bruker SYSOP
+        // Første bruker blir SYSOP
         if (userRepository.count() == 0) {
             user.setRole(User.Role.SYSOP);
             System.out.println("First user detected: assigning SYSOP role.");
         } else {
-            user.setRole(User.Role.USER); // standard rolle
+            user.setRole(User.Role.USER);
         }
 
         return userRepository.save(user);
     }
-
 
     public void updateEmail(User user, String email) {
         user.setEmail(email);
@@ -62,6 +64,21 @@ public class UserService {
 
     public void updateRole(User user, User.Role role) {
         user.setRole(role);
+        userRepository.save(user);
+    }
+
+    public void updatePassword(User user, String rawPassword) {
+        String hash = passwordEncoder.encode(rawPassword);
+        user.setPasswordHash(hash);
+        userRepository.save(user);
+    }
+
+    public boolean verifyPassword(User user, String rawPassword) {
+        return passwordEncoder.matches(rawPassword, user.getPasswordHash());
+    }
+
+    public void updateLastLogin(User user) {
+        user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
     }
 }

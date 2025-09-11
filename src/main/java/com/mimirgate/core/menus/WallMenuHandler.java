@@ -8,8 +8,6 @@ import com.mimirgate.service.WallService;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.mimirgate.core.util.WallRenderer.renderWall;
@@ -38,6 +36,14 @@ public class WallMenuHandler implements MenuHandler {
                 showWall(out, in);
                 yield MenuNav.STAY;
             }
+            case "L" -> {
+                showLastPosts(out, in, 20);
+                yield MenuNav.STAY;
+            }
+            case "U" -> {
+                showByUser(out, in);
+                yield MenuNav.STAY;
+            }
             case "N" -> {
                 createPost(out, in);
                 yield MenuNav.STAY;
@@ -56,17 +62,34 @@ public class WallMenuHandler implements MenuHandler {
         renderWall(out, in, messages, terminalWidth);
     }
 
-    private List<String> wrapText(String text, int width) {
-        List<String> lines = new ArrayList<>();
-        String remaining = text;
-        while (remaining.length() > width) {
-            lines.add(remaining.substring(0, width));
-            remaining = remaining.substring(width);
+    private void showLastPosts(PrintWriter out, BufferedReader in, int count) {
+        List<WallMessage> all = wallService.getMessagesForWidth(terminalWidth);
+        int fromIndex = Math.max(0, all.size() - count);
+        List<WallMessage> last = all.subList(fromIndex, all.size());
+        renderWall(out, in, last, terminalWidth);
+    }
+
+    private void showByUser(PrintWriter out, BufferedReader in) {
+        try {
+            out.print("Enter username: ");
+            out.flush();
+            String user = in.readLine();
+            if (user == null || user.isBlank()) {
+                out.println("Canceled.");
+                return;
+            }
+            List<WallMessage> all = wallService.getMessagesForWidth(terminalWidth);
+            List<WallMessage> filtered = all.stream()
+                    .filter(m -> m.getUsername().equalsIgnoreCase(user.trim()))
+                    .toList();
+            if (filtered.isEmpty()) {
+                out.println("No posts found for user: " + user);
+                return;
+            }
+            renderWall(out, in, filtered, terminalWidth);
+        } catch (IOException e) {
+            out.println("Error: " + e.getMessage());
         }
-        if (!remaining.isEmpty()) {
-            lines.add(remaining);
-        }
-        return lines;
     }
 
     private void createPost(PrintWriter out, BufferedReader in) {

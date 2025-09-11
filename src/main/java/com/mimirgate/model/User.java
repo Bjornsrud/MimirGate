@@ -1,6 +1,7 @@
 package com.mimirgate.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -28,6 +29,11 @@ public class User {
     @Column(nullable = false)
     private int terminalWidth = 40; // 40 er default
 
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    private LocalDateTime lastLogin;
+
     public enum Role {
         USER,
         COSYSOP,
@@ -36,6 +42,7 @@ public class User {
 
     // Gettere og settere
     public Long getId() { return id; }
+
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 
@@ -53,4 +60,10 @@ public class User {
 
     public int getTerminalWidth() { return terminalWidth; }
     public void setTerminalWidth(int terminalWidth) { this.terminalWidth = terminalWidth; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getLastLogin() { return lastLogin; }
+    public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
 }

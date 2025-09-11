@@ -48,13 +48,15 @@ public class LoginHandler {
                     if (userOpt.isPresent()) {
                         return Optional.of(new LoginResult(userOpt.get(), terminalWidth, LoginResult.LoginStatus.SUCCESS));
                     }
-                    return Optional.of(new LoginResult(null, terminalWidth, LoginResult.LoginStatus.RETRY));
+                    out.println("Login failed. Returning to login menu...");
+                    break;
                 case "R":
                     Optional<User> newUser = register(out, in);
                     if (newUser.isPresent()) {
                         return Optional.of(new LoginResult(newUser.get(), terminalWidth, LoginResult.LoginStatus.SUCCESS));
                     }
-                    return Optional.of(new LoginResult(null, terminalWidth, LoginResult.LoginStatus.RETRY));
+                    out.println("Registration failed. Returning to login menu...");
+                    break;
                 case "D":
                     out.println("Goodbye!");
                     return Optional.of(new LoginResult(null, terminalWidth, LoginResult.LoginStatus.DISCONNECT));
@@ -79,8 +81,7 @@ public class LoginHandler {
             if (choice != null && choice.trim().equalsIgnoreCase("Y")) {
                 return registerWithPredefinedUsername(out, in, username);
             } else {
-                out.println("Returning to login menu...");
-                return Optional.empty(); // Gå tilbake til login-menyen, ikke avslutt sesjonen
+                return Optional.empty();
             }
         }
 
@@ -91,10 +92,15 @@ public class LoginHandler {
             String password = in.readLine();
             if (password == null) return Optional.empty();
 
-            if (password.equals(userOpt.get().getPasswordHash())) {
+            if (userService.verifyPassword(userOpt.get(), password)) {
+                User user = userOpt.get();
                 out.println("Login successful. Welcome " + username + "!");
-                terminalWidth = userOpt.get().getTerminalWidth(); // Sett brukerens preferanse
-                return userOpt;
+                terminalWidth = user.getTerminalWidth();
+
+                // 🔹 Oppdater last login
+                userService.updateLastLogin(user);
+
+                return Optional.of(user);
             } else {
                 attempts--;
                 if (attempts > 0) {
@@ -103,8 +109,8 @@ public class LoginHandler {
             }
         }
 
-        out.println("Too many failed attempts. Returning to login menu.");
-        return Optional.empty(); // Ikke avslutt sesjonen, gå tilbake til login-menyen
+        out.println("Too many failed attempts.");
+        return Optional.empty();
     }
 
     private Optional<User> registerWithPredefinedUsername(PrintWriter out, BufferedReader in, String username) throws IOException {
@@ -204,10 +210,9 @@ public class LoginHandler {
         String widthStr = in.readLine();
         int defaultWidth = "80".equals(widthStr) ? 80 : 40;
 
-
         User user = userService.createUser(username, password, email, bio, defaultWidth);
         out.println("Registration successful. Welcome " + username + "!");
-        terminalWidth = defaultWidth; // Bruker dette for resten av sesjonen
+        terminalWidth = defaultWidth;
         return Optional.of(user);
     }
 }
