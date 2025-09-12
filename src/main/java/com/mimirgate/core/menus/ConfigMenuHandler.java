@@ -42,6 +42,9 @@ public class ConfigMenuHandler implements MenuHandler {
                 case "D":
                     handleTerminalSettings(out, in);
                     return MenuNav.STAY;
+                case "S":
+                    handleShowSettings(out);
+                    return MenuNav.STAY;
                 default:
                     out.println("\n[Config Command " + command + "] Not implemented.");
                     return MenuNav.STAY;
@@ -77,19 +80,19 @@ public class ConfigMenuHandler implements MenuHandler {
     }
 
     private void handleChangePassword(PrintWriter out, BufferedReader in) throws IOException {
-        out.print("Enter new password: ");
+        out.print("Enter new password (leave blank to cancel): ");
         out.flush();
         String pass1 = in.readLine();
-        if (pass1 == null || pass1.isEmpty()) {
-            out.println("Password update canceled (empty input).");
+        if (pass1 == null || pass1.isBlank()) {
+            out.println("Password update canceled.");
             return;
         }
 
         out.print("Re-enter new password: ");
         out.flush();
         String pass2 = in.readLine();
-        if (pass2 == null || pass2.isEmpty()) {
-            out.println("Password update canceled (empty input).");
+        if (pass2 == null || pass2.isBlank()) {
+            out.println("Password update canceled.");
             return;
         }
 
@@ -122,6 +125,15 @@ public class ConfigMenuHandler implements MenuHandler {
         } catch (NumberFormatException e) {
             out.println("Invalid input. Must be 40 or 80.");
         }
+    }
+
+    private void handleShowSettings(PrintWriter out) {
+        out.println("\nCurrent user settings:");
+        out.println(" Username       : " + currentUser.getUsername());
+        out.println(" Email          : " + (currentUser.getEmail() != null ? currentUser.getEmail() : "(none)"));
+        out.println(" Bio            : " + (currentUser.getBio() != null ? currentUser.getBio() : "(none)"));
+        out.println(" Terminal width : " + currentUser.getTerminalWidth());
+        out.println(" Role           : " + currentUser.getRole());
     }
 
     @Override

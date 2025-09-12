@@ -3,5 +3,6 @@
 ----------------------------------------
  [U] Update Bio     [E] Update Email
  [P] Chg Password   [D] Term Settings
- [M] Main Menu      [Q] Disconnect
+ [M] Main Menu      [S] Show Settings
+ [Q] Disconnect
 ----------------------------------------

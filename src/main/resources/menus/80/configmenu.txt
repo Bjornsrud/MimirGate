@@ -2,5 +2,6 @@
                            *** CONFIG MENU ***
 --------------------------------------------------------------------------------
    [U] Update Bio             [E] Update Email          [P] Change Password
-   [D] Terminal Settings      [M] Main Menu             [Q] Disconnect
+   [D] Terminal Settings      [M] Main Menu             [S] Show Settings
+   [Q] Disconnect
 --------------------------------------------------------------------------------
