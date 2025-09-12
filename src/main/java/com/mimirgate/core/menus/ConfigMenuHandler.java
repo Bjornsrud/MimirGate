@@ -12,44 +12,32 @@ public class ConfigMenuHandler implements MenuHandler {
     private final String menuText;
     private final UserService userService;
     private final User currentUser;
+    private final TerminalWidthChangeHandler widthChangeHandler;
 
-    public ConfigMenuHandler(String menuText, UserService userService, User currentUser) {
+    public ConfigMenuHandler(String menuText, UserService userService, User currentUser,
+                             TerminalWidthChangeHandler widthChangeHandler) {
         this.menuText = menuText;
         this.userService = userService;
         this.currentUser = currentUser;
+        this.widthChangeHandler = widthChangeHandler;
     }
 
     @Override
     public MenuNav handleCommand(String command, PrintWriter out, BufferedReader in) {
         try {
-
             if (command == null || command.isBlank()) {
                 return MenuNav.STAY; // ignorer tom input
             }
 
             switch (command.toUpperCase()) {
-                case "?":
-                    out.println(menuText);
-                    return MenuNav.STAY;
-                case "M":
-                    return MenuNav.MAIN;
-                case "Q":
-                    return MenuNav.DISCONNECT;
-                case "U":
-                    handleUpdateBio(out, in);
-                    return MenuNav.STAY;
-                case "E":
-                    handleUpdateEmail(out, in);
-                    return MenuNav.STAY;
-                case "P":
-                    handleChangePassword(out, in);
-                    return MenuNav.STAY;
-                case "D":
-                    handleTerminalSettings(out, in);
-                    return MenuNav.STAY;
-                case "S":
-                    handleShowSettings(out);
-                    return MenuNav.STAY;
+                case "?": out.println(menuText); return MenuNav.STAY;
+                case "M": return MenuNav.MAIN;
+                case "Q": return MenuNav.DISCONNECT;
+                case "U": handleUpdateBio(out, in); return MenuNav.STAY;
+                case "E": handleUpdateEmail(out, in); return MenuNav.STAY;
+                case "P": handleChangePassword(out, in); return MenuNav.STAY;
+                case "D": handleTerminalSettings(out, in); return MenuNav.STAY;
+                case "S": handleShowSettings(out); return MenuNav.STAY;
                 default:
                     out.println("\u0007Unknown command: " + command + "  (type ? for menu)");
                     return MenuNav.STAY;
@@ -122,8 +110,12 @@ public class ConfigMenuHandler implements MenuHandler {
         try {
             int width = Integer.parseInt(input.trim());
             if (width == 40 || width == 80) {
+                currentUser.setTerminalWidth(width);
                 userService.updateTerminalWidth(currentUser, width);
                 out.println("Terminal width updated to " + width + ".");
+                if (widthChangeHandler != null) {
+                    widthChangeHandler.onWidthChange(width); // live oppdatering
+                }
             } else {
                 out.println("Invalid width. Must be 40 or 80.");
             }
@@ -142,12 +134,7 @@ public class ConfigMenuHandler implements MenuHandler {
     }
 
     @Override
-    public String getPrompt() {
-        return "Config Menu (? for menu) > ";
-    }
-
+    public String getPrompt() { return "Config Menu (? for menu) > "; }
     @Override
-    public String getMenuText() {
-        return menuText;
-    }
+    public String getMenuText() { return menuText; }
 }

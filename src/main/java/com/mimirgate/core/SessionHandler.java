@@ -42,7 +42,8 @@ public class SessionHandler implements Runnable {
                           WallService wallService,
                           ConferenceService conferenceService,
                           ConferenceMembershipService membershipService,
-                          ThreadService threadService, PostService postService) {
+                          ThreadService threadService,
+                          PostService postService) {
         this.socket = socket;
         this.in = in;
         this.out = out;
@@ -85,7 +86,18 @@ public class SessionHandler implements Runnable {
         Map<String, String> activeMenus = getActiveMenus();
         menus.clear();
         menus.put("MAIN",   new MainMenuHandler(activeMenus.get("MAIN"), userService));
-        menus.put("CONFIG", new ConfigMenuHandler(activeMenus.get("CONFIG"), userService, currentUser));
+
+        // Callback for live width change
+        TerminalWidthChangeHandler widthHandler = (newWidth) -> {
+            setTerminalWidth(newWidth);
+            initMenus();
+            printMenu();
+            printPrompt();
+        };
+
+        menus.put("CONFIG", new ConfigMenuHandler(
+                activeMenus.get("CONFIG"), userService, currentUser, widthHandler));
+
         menus.put("SYSOP",  new SysopMenuHandler(activeMenus.get("SYSOP"), wallService));
         menus.put("PM",     new PmMenuHandler(activeMenus.get("PM")));
         // Viktig: WallMenuHandler trenger service + bruker + width
@@ -98,7 +110,8 @@ public class SessionHandler implements Runnable {
                 threadService,
                 postService,
                 currentUser));
-        menus.put("CONF_ADMIN", new ConferenceAdminMenuHandler(activeMenus.get("CONF_ADMIN"), conferenceService, currentUser));
+        menus.put("CONF_ADMIN", new ConferenceAdminMenuHandler(
+                activeMenus.get("CONF_ADMIN"), conferenceService, currentUser));
     }
 
     private void printMenu() {
@@ -132,8 +145,8 @@ public class SessionHandler implements Runnable {
             // Menyene må initialiseres ETTER at bruker/width er kjent
             initMenus();
             out.println(getActiveMenus().get("LINE"));
-            System.out.println();
             out.println(getActiveMenus().get("STARS"));
+
             // 2) Vis Wall “velkomst” først
             showWallPreviewAndWait();
 
@@ -148,7 +161,7 @@ public class SessionHandler implements Runnable {
                 command = command.trim();
                 if (command.isEmpty()) { printPrompt(); continue; }
 
-                // Globale
+                // Globale overrides
                 if ("40".equalsIgnoreCase(command)) {
                     setTerminalWidth(40);
                     initMenus();

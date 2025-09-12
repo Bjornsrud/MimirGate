@@ -3,6 +3,6 @@
                            *** CONFIG MENU ***
 --------------------------------------------------------------------------------
    [U] Update Bio             [E] Update Email          [P] Change Password
-   [D] Terminal Settings      [M] Main Menu             [S] Show Settings
+   [D] Terminal Width         [S] Show Settings         [M] Main Menu
    [Q] Disconnect
 --------------------------------------------------------------------------------

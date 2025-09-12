@@ -19,7 +19,8 @@ public class TextInputEditor {
     public static String promptForText(PrintWriter out, BufferedReader in, String prompt, int maxChars) throws IOException {
         out.println();
         out.println(prompt + " (max " + maxChars + " chars)");
-        out.println("Type /save to finish, /cancel to abort.");
+        out.println("To save or cancel, input on empty line:");
+        out.println("'/save' to finish,  '/cancel' to abort.");
         out.flush();
 
         StringBuilder buffer = new StringBuilder();

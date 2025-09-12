@@ -3,7 +3,7 @@
          *** CONFIG MENU ***
 ----------------------------------------
  [U] Update Bio     [E] Update Email
- [P] Chg Password   [D] Term Settings
+ [P] Chg Password   [D] Term Width
  [M] Main Menu      [S] Show Settings
  [Q] Disconnect
 ----------------------------------------
