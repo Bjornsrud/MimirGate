@@ -22,6 +22,11 @@ public class ConfigMenuHandler implements MenuHandler {
     @Override
     public MenuNav handleCommand(String command, PrintWriter out, BufferedReader in) {
         try {
+
+            if (command == null || command.isBlank()) {
+                return MenuNav.STAY; // ignorer tom input
+            }
+
             switch (command.toUpperCase()) {
                 case "?":
                     out.println(menuText);
@@ -46,7 +51,7 @@ public class ConfigMenuHandler implements MenuHandler {
                     handleShowSettings(out);
                     return MenuNav.STAY;
                 default:
-                    out.println("\n[Config Command " + command + "] Not implemented.");
+                    out.println("\u0007Unknown command: " + command + "  (type ? for menu)");
                     return MenuNav.STAY;
             }
         } catch (IOException e) {

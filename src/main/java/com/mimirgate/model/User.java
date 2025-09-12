@@ -36,6 +36,7 @@ public class User {
 
     public enum Role {
         USER,
+        VIP,
         COSYSOP,
         SYSOP
     }

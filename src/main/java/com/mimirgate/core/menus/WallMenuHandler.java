@@ -27,6 +27,11 @@ public class WallMenuHandler implements MenuHandler {
 
     @Override
     public MenuNav handleCommand(String command, PrintWriter out, BufferedReader in) {
+
+        if (command == null || command.isBlank()) {
+            return MenuNav.STAY; // ignorer tom input
+        }
+
         return switch (command.toUpperCase()) {
             case "?" -> {
                 out.println(menuText);
@@ -51,7 +56,7 @@ public class WallMenuHandler implements MenuHandler {
             case "M" -> MenuNav.MAIN;
             case "Q" -> MenuNav.DISCONNECT;
             default -> {
-                out.println("\n[Wall Command " + command + "] Not implemented yet.");
+                out.println("\u0007Unknown command: " + command + "  (type ? for menu)");
                 yield MenuNav.STAY;
             }
         };

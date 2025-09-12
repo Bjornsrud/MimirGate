@@ -19,8 +19,8 @@ public class WallRenderer {
     public static void renderWall(PrintWriter out, BufferedReader in, List<WallMessage> messages, int terminalWidth) {
         out.println();
         out.println((terminalWidth == 80)
-                ? "================ MESSAGE WALL ================"
-                : "===== MESSAGE WALL =====");
+                ? "================================[ MESSAGE WALL ]================================"
+                : "===========[ MESSAGE-WALL! ]===========");
 
         if (messages.isEmpty()) {
             out.println("(No messages yet.)");
@@ -34,8 +34,10 @@ public class WallRenderer {
             }
         }
 
-        out.println("-----------------------------------------------");
-        out.println("Press ENTER to continue...");
+        out.println((terminalWidth == 80)
+                ? "==============================================================================="
+                : "=======================================");
+        out.println("Press any key to continue...");
         out.flush();
 
         try {

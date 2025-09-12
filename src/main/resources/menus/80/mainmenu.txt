@@ -1,7 +1,8 @@
+
 --------------------------------------------------------------------------------
                              *** MAIN MENU ***
 --------------------------------------------------------------------------------
    [C] Chat                   [W] Message Wall          [P] Private Messages
-   [F] File Menu              [U] User config           [S] Sysop Menu
+   [K] Conferences            [U] User config           [S] Sysop Menu
    [O] Online users           [L] Lookup User           [Q] Disconnect
 --------------------------------------------------------------------------------

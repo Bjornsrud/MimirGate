@@ -16,7 +16,7 @@ public class LoginHandler {
     private final UserService userService;
     private final Map<String, String> menuTexts40;
     private final Map<String, String> menuTexts80;
-    private int terminalWidth = 40; // 40 er default
+    private int terminalWidth = 80; // 80 er default
 
     public LoginHandler(UserService userService, Map<String, String> menuTexts40, Map<String, String> menuTexts80) {
         this.userService = userService;

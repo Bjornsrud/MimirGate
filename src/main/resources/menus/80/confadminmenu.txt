@@ -1,7 +1,7 @@
 
 --------------------------------------------------------------------------------
-                         *** PRIVATE MESSAGES ***
+                      *** CONFERENCE ADMIN MENU ***
 --------------------------------------------------------------------------------
-   [L] List All Messages      [U] List from User       [N] New Private Message
-   [M] Main Menu              [Q] Disconnect
+    [C] Create conference     [D] Delete conference     [B] Back to Conf Menu
+    [R] Toggle restricted     [V] Toggle VIP-only       [Q] Disconnect
 --------------------------------------------------------------------------------

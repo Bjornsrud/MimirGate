@@ -7,6 +7,8 @@ public enum MenuNav {
     SYSOP,          // bytt til SYSOP
     PM,             // bytt til PM
     WALL,           // bytt til WALL
-    FILE,           // bytt til FILE
+    CONFERENCE,     // bytt til Conference menu
+    CONF_ADMIN,     // bytt til Conference Admin menu
+    FILE,           // legacy - kan fjernes senere
     DISCONNECT      // avslutt sesjonen
 }

@@ -1,7 +1,6 @@
 package com.mimirgate.core;
 
-import com.mimirgate.service.UserService;
-import com.mimirgate.service.WallService;
+import com.mimirgate.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -31,10 +30,18 @@ public class TelnetServer {
 
     private final UserService userService;
     private final WallService wallService;
+    private final ConferenceService conferenceService;
+    private final ConferenceMembershipService conferenceMembershipService;
+    private final ThreadService threadService;
+    private final PostService postService;
 
-    public TelnetServer(UserService userService, WallService wallService) {
+    public TelnetServer(UserService userService, WallService wallService, ConferenceService conferenceService, ConferenceMembershipService conferenceMembershipService, ThreadService threadService, PostService postService) {
         this.userService = userService;
         this.wallService = wallService;
+        this.conferenceService = conferenceService;
+        this.conferenceMembershipService = conferenceMembershipService;
+        this.threadService = threadService;
+        this.postService = postService;
     }
 
     @PostConstruct
@@ -56,7 +63,7 @@ public class TelnetServer {
                                 new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
 
                         clientPool.submit(new SessionHandler(
-                                clientSocket, in, out, menuTexts40, menuTexts80, userService, wallService));
+                                clientSocket, in, out, menuTexts40, menuTexts80, userService, wallService, conferenceService, conferenceMembershipService, threadService, postService));
 
                     } catch (IOException e) {
                         if (running) {
@@ -75,8 +82,35 @@ public class TelnetServer {
     }
 
     private void loadMenuTexts() {
-        String[] menuFiles = { "loginmenu.txt", "mainmenu.txt", "configmenu.txt", "sysopmenu.txt", "pmenu.txt", "wallmenu.txt", "filemenu.txt" };
-        String[] menuKeys  = { "LOGIN", "MAIN", "CONFIG", "SYSOP", "PM", "WALL", "FILE" };
+        String[] menuFiles = {
+                "loginmenu.txt",
+                "mainmenu.txt",
+                "configmenu.txt",
+                "sysopmenu.txt",
+                "pmenu.txt",
+                "wallmenu.txt",
+                "confmenu.txt",
+                "confadminmenu.txt",
+                "line.txt",
+                "linename.txt",
+                "stars.txt",
+                "smallstars.txt"
+        };
+
+        String[] menuKeys  = {
+                "LOGIN",
+                "MAIN",
+                "CONFIG",
+                "SYSOP",
+                "PM",
+                "WALL",
+                "CONF",
+                "CONF_ADMIN",
+                "LINE",
+                "LINENAME",
+                "STARS",
+                "SMALLSTARS"
+        };
 
         for (int i = 0; i < menuFiles.length; i++) {
             menuTexts40.put(menuKeys[i], loadResourceFile("menus/40/" + menuFiles[i]));

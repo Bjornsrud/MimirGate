@@ -5,12 +5,10 @@ import com.mimirgate.core.util.WallRenderer;
 import com.mimirgate.model.LoginResult;
 import com.mimirgate.model.User;
 import com.mimirgate.model.WallMessage;
-import com.mimirgate.service.UserService;
-import com.mimirgate.service.WallService;
+import com.mimirgate.service.*;
 
 import java.io.*;
 import java.net.Socket;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.mimirgate.core.util.WallRenderer.renderWall;
@@ -29,11 +27,22 @@ public class SessionHandler implements Runnable {
 
     private final UserService userService;
     private final WallService wallService;
+    private final ConferenceService conferenceService;
+    private final ConferenceMembershipService membershipService;
+    private final ThreadService threadService;
+    private final PostService postService;
     private User currentUser;
 
-    public SessionHandler(Socket socket, BufferedReader in, PrintWriter out,
-                          Map<String,String> menuTexts40, Map<String,String> menuTexts80,
-                          UserService userService, WallService wallService) {
+    public SessionHandler(Socket socket,
+                          BufferedReader in,
+                          PrintWriter out,
+                          Map<String,String> menuTexts40,
+                          Map<String,String> menuTexts80,
+                          UserService userService,
+                          WallService wallService,
+                          ConferenceService conferenceService,
+                          ConferenceMembershipService membershipService,
+                          ThreadService threadService, PostService postService) {
         this.socket = socket;
         this.in = in;
         this.out = out;
@@ -41,6 +50,10 @@ public class SessionHandler implements Runnable {
         this.menuTexts80 = menuTexts80;
         this.userService = userService;
         this.wallService = wallService;
+        this.conferenceService = conferenceService;
+        this.membershipService = membershipService;
+        this.threadService = threadService;
+        this.postService = postService;
         loadWisdoms();
         // Merk: initMenus() kjøres først etter login når vi kjenner bruker + width
     }
@@ -73,21 +86,26 @@ public class SessionHandler implements Runnable {
         menus.clear();
         menus.put("MAIN",   new MainMenuHandler(activeMenus.get("MAIN"), userService));
         menus.put("CONFIG", new ConfigMenuHandler(activeMenus.get("CONFIG"), userService, currentUser));
-        menus.put("SYSOP",  new SysopMenuHandler(activeMenus.get("SYSOP")));
+        menus.put("SYSOP",  new SysopMenuHandler(activeMenus.get("SYSOP"), wallService));
         menus.put("PM",     new PmMenuHandler(activeMenus.get("PM")));
         // Viktig: WallMenuHandler trenger service + bruker + width
         String username = (currentUser != null) ? currentUser.getUsername() : "guest";
         menus.put("WALL",   new WallMenuHandler(activeMenus.get("WALL"), wallService, username, terminalWidth));
-        menus.put("FILE",   new FileMenuHandler(activeMenus.get("FILE")));
+        menus.put("CONF", new ConferenceMenuHandler(
+                activeMenus.get("CONF"),
+                conferenceService,
+                membershipService,
+                threadService,
+                postService,
+                currentUser));
+        menus.put("CONF_ADMIN", new ConferenceAdminMenuHandler(activeMenus.get("CONF_ADMIN"), conferenceService, currentUser));
     }
 
     private void printMenu() {
-        out.println();
-        if (terminalWidth == 80) {
-            out.println("MIMIRGATE BBS : " + getRandomWisdom());
-        } else {
-            out.println(getRandomWisdom());
-        }
+        out.println(getActiveMenus().get("SMALLSTARS"));
+        out.println(getActiveMenus().get("LINE"));
+        out.println(getRandomWisdom());
+        out.println(getActiveMenus().get("LINE"));
         out.println(getActiveMenus().get(currentMenu));
     }
 
@@ -113,7 +131,9 @@ public class SessionHandler implements Runnable {
 
             // Menyene må initialiseres ETTER at bruker/width er kjent
             initMenus();
-
+            out.println(getActiveMenus().get("LINE"));
+            System.out.println();
+            out.println(getActiveMenus().get("STARS"));
             // 2) Vis Wall “velkomst” først
             showWallPreviewAndWait();
 
@@ -157,17 +177,42 @@ public class SessionHandler implements Runnable {
                 MenuNav nav = handler.handleCommand(command, out, in);
 
                 switch (nav) {
-                    case DISCONNECT: out.println("Goodbye!"); running = false; break;
-                    case MAIN:   currentMenu = "MAIN";   printMenu(); break;
-                    case CONFIG: currentMenu = "CONFIG"; printMenu(); break;
-                    case SYSOP:  currentMenu = "SYSOP";  printMenu(); break;
-                    case PM:     currentMenu = "PM";     printMenu(); break;
-                    case WALL:   currentMenu = "WALL";   printMenu(); break;
-                    case FILE:   currentMenu = "FILE";   printMenu(); break;
+                    case DISCONNECT:
+                        out.println("Goodbye!");
+                        running = false;
+                        break;
+                    case MAIN:
+                        currentMenu = "MAIN";
+                        printMenu();
+                        break;
+                    case CONFIG:
+                        currentMenu = "CONFIG";
+                        printMenu();
+                        break;
+                    case SYSOP:
+                        currentMenu = "SYSOP";
+                        printMenu();
+                        break;
+                    case PM:
+                        currentMenu = "PM";
+                        printMenu();
+                        break;
+                    case WALL:
+                        currentMenu = "WALL";
+                        printMenu();
+                        break;
+                    case CONFERENCE:
+                        currentMenu = "CONF";
+                        printMenu();
+                        break;
+                    case CONF_ADMIN:
+                        currentMenu = "CONF_ADMIN";
+                        printMenu();
+                        break;
                     case STAY:
-                    default: break;
+                    default:
+                        break;
                 }
-
                 if (running) printPrompt();
             }
 
@@ -187,23 +232,5 @@ public class SessionHandler implements Runnable {
     private void showWallPreviewAndWait() throws IOException {
         List<WallMessage> msgs = wallService.getMessagesForWidth(terminalWidth);
         renderWall(out, in, msgs, terminalWidth);
-    }
-
-    // Enkle hjelpere (bruk dine hvis du har fra før)
-    private String currentUserLine(String user, String ts) {
-        String s = user + " — " + ts;
-        return s.length() > terminalWidth ? s.substring(0, terminalWidth) : s;
-    }
-
-    private List<String> wrap(String text, int width) {
-        List<String> lines = new ArrayList<>();
-        if (text == null) return lines;
-        int i = 0;
-        while (i < text.length()) {
-            int end = Math.min(i + width, text.length());
-            lines.add(text.substring(i, end));
-            i = end;
-        }
-        return lines;
     }
 }

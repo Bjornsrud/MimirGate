@@ -12,11 +12,18 @@ public class PmMenuHandler implements MenuHandler {
 
     @Override
     public MenuNav handleCommand(String command, PrintWriter out, BufferedReader in) {
+
+        if (command == null || command.isBlank()) {
+            return MenuNav.STAY; // ignorer tom input
+        }
+
         switch (command.toUpperCase()) {
             case "?": out.println(menuText); return MenuNav.STAY;
             case "M": return MenuNav.MAIN;
             case "Q": return MenuNav.DISCONNECT;
-            default: out.println("\n[PM Command " + command + "] Not implemented yet."); return MenuNav.STAY;
+            default:
+                out.println("\u0007Unknown command: " + command + "  (type ? for menu)");
+                return MenuNav.STAY;
         }
     }
 

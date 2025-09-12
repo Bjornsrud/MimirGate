@@ -1,5 +1,6 @@
+
 ----------------------------------------
-       *** PRIVATE MSGS ***
+        *** PRIVATE MESSAGES ***
 ----------------------------------------
  [L] List All        [U] List by User
  [N] New Msg         [M] Main Menu

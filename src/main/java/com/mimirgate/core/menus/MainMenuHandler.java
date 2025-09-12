@@ -19,6 +19,10 @@ public class MainMenuHandler implements MenuHandler {
 
     @Override
     public MenuNav handleCommand(String command, PrintWriter out, BufferedReader in) {
+        if (command == null || command.isBlank()) {
+            return MenuNav.STAY; // ignorer tom input
+        }
+
         switch (command.toUpperCase()) {
             case "?":
                 out.println(menuText);
@@ -33,8 +37,8 @@ public class MainMenuHandler implements MenuHandler {
                 return MenuNav.PM;
             case "W":
                 return MenuNav.WALL;
-            case "F":
-                return MenuNav.FILE;
+            case "K":
+                return MenuNav.CONFERENCE;
             case "C":
                 out.println("\n[Chat] Not implemented yet. Type ':EXIT:' to leave (placeholder).");
                 return MenuNav.STAY;
@@ -62,7 +66,7 @@ public class MainMenuHandler implements MenuHandler {
                 }
                 return MenuNav.STAY;
             default:
-                out.println("\n[Main Command " + command + "] Not implemented yet.");
+                out.println("\u0007Unknown command: " + command + "  (type ? for menu)");
                 return MenuNav.STAY;
         }
     }

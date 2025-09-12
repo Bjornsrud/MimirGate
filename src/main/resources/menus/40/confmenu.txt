@@ -1,0 +1,10 @@
+
+---------------------------------------
+       *** CONFERENCE MENU ***
+---------------------------------------
+ [L] List posts     [N] New post
+ [R] Reply to post  [C] List confs.
+ [J] Join conf      [K] Leave conf
+ [A] Admin          [M] Main Menu
+ [Q] Disconnect
+---------------------------------------

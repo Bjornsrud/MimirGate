@@ -44,4 +44,13 @@ public class WallService {
     public List<WallMessage> getMessagesByUser(String username) {
         return wallMessageRepository.findByUsernameIgnoreCase(username);
     }
+
+    public List<WallMessage> findAll() {
+        return wallMessageRepository.findAll();
+    }
+
+    public void deleteMessage(Long id) {
+        wallMessageRepository.deleteById(id);
+    }
+
 }

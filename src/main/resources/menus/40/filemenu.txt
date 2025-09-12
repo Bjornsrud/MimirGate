@@ -1,8 +1,0 @@
-----------------------------------------
-          *** FILE MENU ***
-----------------------------------------
- [L] List Dirs      [F] List Files
- [W] Wild Search    [U] Upload File
- [D] Download File  [M] Main Menu
- [Q] Disconnect
-----------------------------------------

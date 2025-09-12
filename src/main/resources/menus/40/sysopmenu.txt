@@ -1,8 +1,9 @@
+
 ----------------------------------------
          *** SYSOP MENU ***
 ----------------------------------------
- [M] Mute User      [B] Ban User
- [D] Delete User    [T] Threads
- [P] Posts          [M] Main Menu
+ [U] Manage Users   [R] Change Roles
+ [W] Moderate Wall  [T] Moderate Threads
+ [P] Moderate Posts [M] Main Menu
  [Q] Disconnect
 ----------------------------------------

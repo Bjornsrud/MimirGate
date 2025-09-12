@@ -1,0 +1,8 @@
+
+---------------------------------------
+    *** CONFERENCE ADMIN MENU ***
+---------------------------------------
+ [C] Create conf       [D] Delete conf
+ [R] Toggle restricted [V] Toggle VIP
+ [B] Back to Conf Menu [Q] Disconnect
+---------------------------------------
