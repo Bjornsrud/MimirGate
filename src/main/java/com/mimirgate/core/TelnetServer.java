@@ -1,7 +1,7 @@
 package com.mimirgate.core;
 
+import com.mimirgate.core.util.MenuLoader;
 import com.mimirgate.service.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
@@ -11,7 +11,6 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,8 +24,8 @@ public class TelnetServer {
     private ServerSocket serverSocket;
     private ExecutorService clientPool;
     private boolean running = true;
-    private Map<String, String> menuTexts40 = new HashMap<>();
-    private Map<String, String> menuTexts80 = new HashMap<>();
+    private Map<String, String> menuTexts40;
+    private Map<String, String> menuTexts80;
 
     private final UserService userService;
     private final WallService wallService;
@@ -35,7 +34,12 @@ public class TelnetServer {
     private final ThreadService threadService;
     private final PostService postService;
 
-    public TelnetServer(UserService userService, WallService wallService, ConferenceService conferenceService, ConferenceMembershipService conferenceMembershipService, ThreadService threadService, PostService postService) {
+    public TelnetServer(UserService userService,
+                        WallService wallService,
+                        ConferenceService conferenceService,
+                        ConferenceMembershipService conferenceMembershipService,
+                        ThreadService threadService,
+                        PostService postService) {
         this.userService = userService;
         this.wallService = wallService;
         this.conferenceService = conferenceService;
@@ -46,7 +50,9 @@ public class TelnetServer {
 
     @PostConstruct
     public void start() {
-        loadMenuTexts();
+        // Bruk MenuLoader i stedet for intern metode
+        this.menuTexts40 = MenuLoader.loadMenus(40);
+        this.menuTexts80 = MenuLoader.loadMenus(80);
 
         clientPool = Executors.newCachedThreadPool();
         try {
@@ -63,7 +69,9 @@ public class TelnetServer {
                                 new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
 
                         clientPool.submit(new SessionHandler(
-                                clientSocket, in, out, menuTexts40, menuTexts80, userService, wallService, conferenceService, conferenceMembershipService, threadService, postService));
+                                clientSocket, in, out, menuTexts40, menuTexts80,
+                                userService, wallService, conferenceService,
+                                threadService, postService));
 
                     } catch (IOException e) {
                         if (running) {
@@ -79,54 +87,6 @@ public class TelnetServer {
         } catch (IOException e) {
             throw new RuntimeException("Unable to start Telnet server on port " + port, e);
         }
-    }
-
-    private void loadMenuTexts() {
-        String[] menuFiles = {
-                "loginmenu.txt",
-                "mainmenu.txt",
-                "configmenu.txt",
-                "sysopmenu.txt",
-                "pmenu.txt",
-                "wallmenu.txt",
-                "confmenu.txt",
-                "confadminmenu.txt",
-                "line.txt",
-                "linename.txt",
-                "stars.txt",
-                "smallstars.txt"
-        };
-
-        String[] menuKeys  = {
-                "LOGIN",
-                "MAIN",
-                "CONFIG",
-                "SYSOP",
-                "PM",
-                "WALL",
-                "CONF",
-                "CONF_ADMIN",
-                "LINE",
-                "LINENAME",
-                "STARS",
-                "SMALLSTARS"
-        };
-
-        for (int i = 0; i < menuFiles.length; i++) {
-            menuTexts40.put(menuKeys[i], loadResourceFile("menus/40/" + menuFiles[i]));
-            menuTexts80.put(menuKeys[i], loadResourceFile("menus/80/" + menuFiles[i]));
-        }
-    }
-
-    private String loadResourceFile(String path) {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
-            if (is != null) {
-                return new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return "Menu file " + path + " not found.";
     }
 
     @PreDestroy

@@ -1,5 +1,6 @@
 package com.mimirgate.core.menus;
 
+import com.mimirgate.core.SessionHandler;
 import com.mimirgate.model.User;
 import com.mimirgate.service.ConferenceService;
 
@@ -11,11 +12,16 @@ public class ConferenceAdminMenuHandler implements MenuHandler {
     private final String menuText;
     private final ConferenceService conferenceService;
     private final User currentUser;
+    private final SessionHandler sessionHandler;
 
-    public ConferenceAdminMenuHandler(String menuText, ConferenceService conferenceService, User currentUser) {
+    public ConferenceAdminMenuHandler(String menuText,
+                                      ConferenceService conferenceService,
+                                      User currentUser,
+                                      SessionHandler sessionHandler) {
         this.menuText = menuText;
         this.conferenceService = conferenceService;
         this.currentUser = currentUser;
+        this.sessionHandler = sessionHandler;
     }
 
     @Override
@@ -33,9 +39,12 @@ public class ConferenceAdminMenuHandler implements MenuHandler {
         switch (command.toUpperCase()) {
             case "?":
                 out.println(menuText);
+                if (sessionHandler.getCurrentConference() != null) {
+                    out.println("Current conference: " + sessionHandler.getCurrentConference().getName());
+                }
                 return MenuNav.STAY;
 
-            case "B": // Back til conference menu (endret fra M for konsistens)
+            case "B":
                 return MenuNav.CONFERENCE;
 
             case "Q":
@@ -75,8 +84,15 @@ public class ConferenceAdminMenuHandler implements MenuHandler {
                     }
 
                     conferenceService.findByName(name.trim()).ifPresentOrElse(conf -> {
+                        // Ikke tillat sletting av current
+                        if (sessionHandler.getCurrentConference() != null &&
+                                sessionHandler.getCurrentConference().getId().equals(conf.getId())) {
+                            out.println("Cannot delete the current active conference: " + conf.getName());
+                            return;
+                        }
+
                         try {
-                            out.println("WARNING: Deleting a conference will also delete ALL threads and posts in it!");
+                            out.println("WARNING: Deleting a conference will also delete ALL threads and posts!");
                             out.println("This action cannot be undone!");
                             out.print("Are you sure you want to delete '" + conf.getName() + "'? (Y/N): ");
                             out.flush();
@@ -146,6 +162,9 @@ public class ConferenceAdminMenuHandler implements MenuHandler {
 
     @Override
     public String getPrompt() {
+        if (sessionHandler.getCurrentConference() != null) {
+            return "[" + sessionHandler.getCurrentConference().getName() + "] Conference Admin Menu (? for menu) > ";
+        }
         return "Conference Admin Menu (? for menu) > ";
     }
 

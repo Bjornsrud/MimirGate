@@ -6,6 +6,7 @@ import com.mimirgate.persistence.ConferenceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +18,16 @@ public class ConferenceService {
     @Autowired
     public ConferenceService(ConferenceRepository conferenceRepository) {
         this.conferenceRepository = conferenceRepository;
+    }
+
+    @PostConstruct
+    public void ensureMainConference() {
+        conferenceRepository.findByNameIgnoreCase("Main")
+                .orElseGet(() -> {
+                    Conference main = new Conference("Main", "Default conference", false, false);
+                    main.setUndeletable(true);
+                    return conferenceRepository.save(main);
+                });
     }
 
     public List<Conference> listAll() {
@@ -34,7 +45,9 @@ public class ConferenceService {
 
     public void deleteConference(Long id) {
         conferenceRepository.findById(id).ifPresent(conf -> {
-            // Ikke rør memberships/threads manuelt – cascade fikser det
+            if (conf.isUndeletable()) {
+                throw new IllegalStateException("The Main conference cannot be deleted.");
+            }
             conferenceRepository.delete(conf);
         });
     }

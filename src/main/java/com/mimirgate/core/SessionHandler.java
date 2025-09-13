@@ -2,6 +2,7 @@ package com.mimirgate.core;
 
 import com.mimirgate.core.menus.*;
 import com.mimirgate.core.util.WallRenderer;
+import com.mimirgate.model.Conference;
 import com.mimirgate.model.LoginResult;
 import com.mimirgate.model.User;
 import com.mimirgate.model.WallMessage;
@@ -28,10 +29,12 @@ public class SessionHandler implements Runnable {
     private final UserService userService;
     private final WallService wallService;
     private final ConferenceService conferenceService;
-    private final ConferenceMembershipService membershipService;
     private final ThreadService threadService;
     private final PostService postService;
     private User currentUser;
+
+    // Hvilken konferanse brukeren er i
+    private Conference currentConference;
 
     public SessionHandler(Socket socket,
                           BufferedReader in,
@@ -41,7 +44,6 @@ public class SessionHandler implements Runnable {
                           UserService userService,
                           WallService wallService,
                           ConferenceService conferenceService,
-                          ConferenceMembershipService membershipService,
                           ThreadService threadService,
                           PostService postService) {
         this.socket = socket;
@@ -52,11 +54,9 @@ public class SessionHandler implements Runnable {
         this.userService = userService;
         this.wallService = wallService;
         this.conferenceService = conferenceService;
-        this.membershipService = membershipService;
         this.threadService = threadService;
         this.postService = postService;
         loadWisdoms();
-        // Merk: initMenus() kjøres først etter login når vi kjenner bruker + width
     }
 
     private void loadWisdoms() {
@@ -78,7 +78,7 @@ public class SessionHandler implements Runnable {
         return wisdoms.get(random.nextInt(wisdoms.size()));
     }
 
-    private Map<String, String> getActiveMenus() {
+    public Map<String, String> getActiveMenus() {
         return terminalWidth == 40 ? menuTexts40 : menuTexts80;
     }
 
@@ -100,18 +100,17 @@ public class SessionHandler implements Runnable {
 
         menus.put("SYSOP",  new SysopMenuHandler(activeMenus.get("SYSOP"), wallService));
         menus.put("PM",     new PmMenuHandler(activeMenus.get("PM")));
-        // Viktig: WallMenuHandler trenger service + bruker + width
         String username = (currentUser != null) ? currentUser.getUsername() : "guest";
         menus.put("WALL",   new WallMenuHandler(activeMenus.get("WALL"), wallService, username, terminalWidth));
         menus.put("CONF", new ConferenceMenuHandler(
                 activeMenus.get("CONF"),
                 conferenceService,
-                membershipService,
                 threadService,
                 postService,
-                currentUser));
+                currentUser,
+                this));
         menus.put("CONF_ADMIN", new ConferenceAdminMenuHandler(
-                activeMenus.get("CONF_ADMIN"), conferenceService, currentUser));
+                activeMenus.get("CONF_ADMIN"), conferenceService, currentUser, this));
     }
 
     private void printMenu() {
@@ -122,10 +121,24 @@ public class SessionHandler implements Runnable {
         out.println(getActiveMenus().get(currentMenu));
     }
 
+    public Conference getCurrentConference() {
+        return currentConference;
+    }
+
+    public void setCurrentConference(Conference conf) {
+        this.currentConference = conf;
+    }
+
     private void printPrompt() {
         MenuHandler h = menus.get(currentMenu);
-        String prompt = (h != null) ? h.getPrompt() : (currentMenu + " (? for menu) > ");
-        out.print(prompt);
+        if ("CONF".equals(currentMenu) && currentConference != null) {
+            out.print("[" + currentConference.getName() + "] Conference Menu (? for menu) > ");
+        } else if ("CONF_ADMIN".equals(currentMenu) && currentConference != null) {
+            out.print("[Admin@" + currentConference.getName() + "] > ");
+        } else {
+            String prompt = (h != null) ? h.getPrompt() : (currentMenu + " (? for menu) > ");
+            out.print(prompt);
+        }
         out.flush();
     }
 
@@ -142,12 +155,15 @@ public class SessionHandler implements Runnable {
             this.terminalWidth = loginResult.getTerminalWidth();
             this.currentUser   = loginResult.getUser();
 
+            // Sett Main som currentConference
+            this.currentConference = conferenceService.findByName("Main").orElse(null);
+
             // Menyene må initialiseres ETTER at bruker/width er kjent
             initMenus();
             out.println(getActiveMenus().get("LINE"));
             out.println(getActiveMenus().get("STARS"));
 
-            // 2) Vis Wall “velkomst” først
+            // 2) Vis Wall først
             showWallPreviewAndWait();
 
             // 3) Vanlig menyløype

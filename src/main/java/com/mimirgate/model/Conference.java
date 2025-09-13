@@ -25,6 +25,9 @@ public class Conference {
     @Column(nullable = false)
     private boolean vipOnly = false; // VIP + COSYSOP + SYSOP
 
+    @Column(nullable = false)
+    private boolean undeletable = false; // Main conference kan ikke slettes
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -59,6 +62,9 @@ public class Conference {
 
     public boolean isVipOnly() { return vipOnly; }
     public void setVipOnly(boolean vipOnly) { this.vipOnly = vipOnly; }
+
+    public boolean isUndeletable() { return undeletable; }
+    public void setUndeletable(boolean undeletable) { this.undeletable = undeletable; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -2,7 +2,7 @@
 --------------------------------------------------------------------------------
                            *** CONFERENCE MENU ***
 --------------------------------------------------------------------------------
-   [L] List topics            [N] New topic             [R] Reply to topic
-   [C] List conferences      [J] Join conference       [K] Leave conference
+   [L] List topics           [N] New topic             [R] Reply to topic
+   [C] List conferences      [J] Join conference       [H] Help
    [A] Admin Menu            [M] Main Menu             [Q] Disconnect
 --------------------------------------------------------------------------------

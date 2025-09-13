@@ -1,0 +1,23 @@
+----------------------------------------
+        *** CONFERENCE HOWTO ***
+----------------------------------------
+Conferences are discussion boards.
+You always start in [Main].
+
+Commands:
+ [L] List topics
+ [N] New topic
+ [R] Reply to topic
+ [C] Show all conferences
+ [J] Join conference / set current
+ [H] Show this help
+ [A] Conference Admin Menu (Sysop only)
+ [M] Return to Main Menu
+ [Q] Disconnect
+
+Access rules:
+ Users: normal conferences
+ VIPs:  normal + vip
+ COSYSOP/SYSOP: all
+
+Your prompt shows where you are: [MAIN]

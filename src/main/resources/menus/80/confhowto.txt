@@ -1,0 +1,23 @@
+--------------------------------------------------------------------------------
+                             *** CONFERENCE HOWTO ***
+--------------------------------------------------------------------------------
+Conferences are discussion areas where users create topics and reply to posts.
+You always begin in the [Main] conference, which cannot be deleted.
+
+Key commands:
+ [L] List topics in the current conference
+ [N] Create a new topic with your first post
+ [R] Reply to an existing topic
+ [C] List all available conferences
+ [J] Join Conference - Change current conference.
+ [H] Display this help text again
+ [A] Conference Admin Menu (Cosysop/Sysop only)
+ [M] Return to the Main Menu
+ [Q] Disconnect from the system
+
+Access is based on user role:
+ - USER: standard conferences only.
+ - VIP:  can access and view standard + VIP conferences.
+ - COSYSOP and SYSOP: can access and vie wall, including restricted.
+
+Your prompt shows the current conference: [Main] Conference Menu (? for menu) >
